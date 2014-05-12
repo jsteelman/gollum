@@ -62,6 +62,7 @@ module Precious
     # We want to serve public assets for now
     set :public_folder, "#{dir}/public/gollum"
     set :static, true
+    set :static_cache_control, [:public, max_age: 60 * 60 * 24] # 1 day
     set :default_markup, :markdown
 
     set :mustache, {
@@ -91,6 +92,9 @@ module Precious
       settings.wiki_options.merge!({ :base_path => @base_url })
       @css = settings.wiki_options[:css]
       @js  = settings.wiki_options[:js]
+
+      @static = settings.wiki_options[:static]
+      expires 60 * 60 * 24, :public, :must_revalidate if @static # 1 day
     end
 
     get '/' do
@@ -126,6 +130,8 @@ module Precious
     end
 
     get '/edit/*' do
+      halt 404 if @static
+
       wikip = wiki_page(params[:splat].first)
       @name = wikip.name
       @path = wikip.path
@@ -150,6 +156,8 @@ module Precious
     end
 
     post '/uploadFile' do
+      halt 404 if @static
+
       wiki = wiki_new
 
       unless wiki.allow_uploads
@@ -197,6 +205,8 @@ module Precious
     end
 
     post '/rename/*' do
+      halt 404 if @static
+
       wikip = wiki_page(params[:splat].first)
       halt 500 if wikip.nil?
       wiki   = wikip.wiki
@@ -233,6 +243,8 @@ module Precious
     end
 
     post '/edit/*' do
+      halt 404 if @static
+
       path      = '/' + clean_url(sanitize_empty_params(params[:path])).to_s
       page_name = CGI.unescape(params[:page])
       wiki      = wiki_new
@@ -251,6 +263,8 @@ module Precious
     end
 
     get '/delete/*' do
+      halt 404 if @static
+
       wikip = wiki_page(params[:splat].first)
       name  = wikip.name
       wiki  = wikip.wiki
@@ -263,6 +277,8 @@ module Precious
     end
 
     get '/create/*' do
+      halt 404 if @static
+
       wikip = wiki_page(params[:splat].first.gsub('+', '-'))
       @name = wikip.name.to_url
       @path = wikip.path
@@ -286,6 +302,8 @@ module Precious
     end
 
     post '/create' do
+      halt 404 if @static
+
       name   = params[:page].to_url
       path   = sanitize_empty_params(params[:path]) || ''
       format = params[:format].intern
@@ -305,6 +323,8 @@ module Precious
     end
 
     post '/revert/*/:sha1/:sha2' do
+      halt 404 if @static
+
       wikip = wiki_page(params[:splat].first)
       @path = wikip.path
       @name = wikip.name
@@ -328,6 +348,8 @@ module Precious
     end
 
     post '/preview' do
+      halt 404 if @static
+
       wiki           = wiki_new
       @name          = params[:page] || "Preview"
       @page          = wiki.preview_page(@name, params[:content], params[:format])
@@ -341,6 +363,8 @@ module Precious
     end
 
     get '/history/*' do
+      halt 404 if @static
+
       @page     = wiki_page(params[:splat].first).page
       @page_num = [params[:page].to_i, 1].max
       unless @page.nil?
@@ -352,6 +376,8 @@ module Precious
     end
 
     post '/compare/*' do
+      halt 404 if @static
+
       @file     = params[:splat].first
       @versions = params[:versions] || []
       if @versions.size < 2
@@ -373,6 +399,8 @@ module Precious
       \.{2,3}   # match .. or ...
       (.+)      # match the second SHA1
     }x do |path, start_version, end_version|
+      halt 404 if @static
+
       wikip     = wiki_page(path)
       @path     = wikip.path
       @name     = wikip.name
@@ -385,6 +413,8 @@ module Precious
     end
 
     get %r{/(.+?)/([0-9a-f]{40})} do
+      halt 404 if @static
+
       file_path = params[:captures][0]
       version   = params[:captures][1]
       wikip     = wiki_page(file_path, file_path, version)
@@ -407,6 +437,7 @@ module Precious
       # Sort wiki search results by count (desc) and then by name (asc)
       @results = wiki.search(@query).sort { |a, b| (a[:count] <=> b[:count]).nonzero? || b[:name] <=> a[:name] }.reverse
       @name    = @query
+      @fileview = Gollum::FileView.new(wiki.pages, settings.wiki_options).render_files
       mustache :search
     end
 
@@ -466,6 +497,7 @@ module Precious
         @h1_title      = wiki.h1_title
         @bar_side      = wiki.bar_side
         @allow_uploads = wiki.allow_uploads
+        @fileview      = Gollum::FileView.new(wiki.pages, settings.wiki_options).render_files
 
         mustache :page
       elsif file = wiki.file(fullpath, wiki.ref, true)

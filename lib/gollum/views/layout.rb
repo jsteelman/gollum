@@ -12,6 +12,10 @@ module Precious
         CGI.escape(@name)
       end
 
+      def static
+        @static
+      end
+
       def title
         "Home"
       end

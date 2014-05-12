@@ -22,10 +22,15 @@ options      = { 'port' => 4567, 'bind' => '0.0.0.0' }
 wiki_options = {
     :live_preview  => false,
     :allow_uploads => false,
+    :static        => false,
 }
 
 opts = OptionParser.new do |opts|
   opts.banner = help
+
+  opts.on("--static", "View the wiki in read-only mode.") do
+    wiki_options[:static] = true
+  end
 
   opts.on("--port [PORT]", "Bind port (default 4567).") do |port|
     options['port'] = port.to_i

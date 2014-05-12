@@ -1,7 +1,7 @@
 module Precious
   module Views
     class Search < Layout
-      attr_reader :content, :page, :footer, :results, :query
+      attr_reader :content, :page, :footer, :fileview, :results, :query
 
       def title
         "Search results for " + @query

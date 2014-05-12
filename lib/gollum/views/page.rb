@@ -3,7 +3,7 @@ module Precious
     class Page < Layout
       include HasPage
 
-      attr_reader :content, :page, :header, :footer
+      attr_reader :content, :page, :header, :fileview, :footer
       DATE_FORMAT    = "%Y-%m-%d %H:%M:%S"
       DEFAULT_AUTHOR = 'you'
       @@to_xml       = { :save_with => Nokogiri::XML::Node::SaveOptions::DEFAULT_XHTML ^ 1, :indent => 0, :encoding => 'UTF-8' }
