@@ -5,7 +5,14 @@ Mousetrap.bind(['e'], function( e ) {
   return false;
 });
 </script>
+
 <div id="wiki-wrapper" class="page">
+
+<div id="fileview">
+<div id="fileview-head">Pages</div>
+{{{fileview}}}
+</div>
+
 <div id="head">
   <h1>{{page_header}}</h1>
   <ul class="actions">
@@ -14,6 +21,7 @@ Mousetrap.bind(['e'], function( e ) {
     </li>
     <li class="minibutton"><a href="{{base_url}}/"
        class="action-home-page">Home</a></li>
+    {{^static}}
     <li class="minibutton"><a href="{{base_url}}/pages"
       class="action-all-pages">All</a></li>
     <li class="minibutton"><a href="{{base_url}}/fileview"
@@ -35,8 +43,10 @@ Mousetrap.bind(['e'], function( e ) {
     <li class="minibutton"><a href="{{base_url}}/history/{{escaped_url_path}}"
        class="action-page-history">History</a></li>
     {{/page_exists}}
+    {{/static}}
   </ul>
 </div>
+
 <div id="wiki-content">
 <div class="{{#has_header}}has-header{{/has_header}}{{#has_footer}} has-footer{{/has_footer}}{{#has_sidebar}} has-sidebar has-{{bar_side}}bar{{/has_sidebar}}{{#has_toc}} has-toc{{/has_toc}}">
   {{#has_toc}}
@@ -74,14 +84,21 @@ Mousetrap.bind(['e'], function( e ) {
 
 </div>
 <div id="footer">
+  {{#static}}
+  <p id="last-edit">Last edited on {{date}}</p>
+  {{/static}}
+  {{^static}}
   <p id="last-edit">Last edited by <b>{{author}}</b>, {{date}}</p>
   <p>
     <a id="delete-link" href="{{base_url}}/{{escaped_url_path}}" data-confirm="Are you sure you want to delete this page?"><span>Delete this Page</span></a>
   </p>
+  {{/static}}
 </div>
 </div>
 
+{{^static}}
 <form name="rename" method="POST" action="{{base_url}}/rename/{{escaped_url_path}}">
   <input type="hidden" name="rename"/>
   <input type="hidden" name="message"/>
 </form>
+{{/static}}
